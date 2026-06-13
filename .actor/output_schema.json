@@ -1,0 +1,12 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "LinkedIn Posts Search Scraper output",
+    "properties": {
+        "results": {
+            "title": "Scraped posts",
+            "type": "string",
+            "description": "Dataset containing LinkedIn posts matching the search keyword and filters.",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}

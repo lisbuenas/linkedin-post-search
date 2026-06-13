@@ -1,0 +1,16 @@
+{
+	"actorSpecification": 1,
+	"name": "linkedin-posts-search-scraper",
+	"title": "LinkedIn Posts Search Scraper (No Cookies)",
+	"description": "Search LinkedIn posts by keyword and extract content, author details, reaction counts and media attachments - no account or cookies required.",
+	"version": "0.0",
+	"meta": {
+		"templateId": "ts-crawlee-puppeteer-chrome"
+	},
+	"input": "./input_schema.json",
+	"output": "./output_schema.json",
+	"storages": {
+		"dataset": "./dataset_schema.json"
+	},
+	"dockerfile": "./Dockerfile"
+}

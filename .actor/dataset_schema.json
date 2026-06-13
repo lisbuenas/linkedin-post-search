@@ -1,0 +1,51 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "flatten": ["author", "stats", "posted_at", "media"],
+                "fields": [
+                    "urn",
+                    "url",
+                    "text",
+                    "author.name",
+                    "author.headline",
+                    "author.profile_url",
+                    "stats.total_reactions",
+                    "stats.comments",
+                    "stats.reposts",
+                    "posted_at.relative",
+                    "posted_at.date",
+                    "media.type",
+                    "page_number",
+                    "from_keyword",
+                    "error",
+                    "note"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "urn":                   { "label": "URN" },
+                    "url":                   { "label": "Post URL", "format": "link" },
+                    "text":                  { "label": "Text" },
+                    "author.name":           { "label": "Author" },
+                    "author.headline":       { "label": "Headline" },
+                    "author.profile_url":    { "label": "Profile", "format": "link" },
+                    "stats.total_reactions": { "label": "Reactions" },
+                    "stats.comments":        { "label": "Comments" },
+                    "stats.reposts":         { "label": "Reposts" },
+                    "posted_at.relative":    { "label": "Posted" },
+                    "posted_at.date":        { "label": "Date" },
+                    "media.type":            { "label": "Media" },
+                    "page_number":           { "label": "Page" },
+                    "from_keyword":          { "label": "Keyword" },
+                    "error":                 { "label": "Error" },
+                    "note":                  { "label": "Note" }
+                }
+            }
+        }
+    }
+}

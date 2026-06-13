@@ -84,30 +84,3 @@ One dataset item per post:
 ```
 
 When the scraper cannot retrieve data for a given input it pushes an error item instead of silently skipping it, distinguishable by the `error` field (`NO_RESULTS`, `NO_MORE_RESULTS`, `LOGIN_WALL`, `INVALID_INPUT`).
-
-## Avoiding the auth wall
-
-LinkedIn aggressively serves login/auth walls to anonymous browsers. Rather than pay for residential proxies, the actor leans on a stack of **free** defenses (see [`src/antiBlock.ts`](src/antiBlock.ts)) to look like a real, returning guest on cheap datacenter IPs:
-
-1. **Cheap datacenter proxies, rotated hard.** The `proxyConfiguration` input defaults to Apify's plan-included datacenter pool — no per-GB surcharge. Because datacenter IPs get flagged faster, each session is capped at 4 requests and the pool holds up to 100 sessions, so no single IP makes enough requests to look like a bot.
-2. **Session pinning + retirement.** Each session keeps one IP and cookie jar (`useSessionPool` + `persistCookiesPerSession`). A session is retired after its few requests, or immediately when it hits a wall, so retries run on a fresh IP instead of hammering the flagged one.
-3. **Guest-cookie warmup.** Before the first search, the browser visits the LinkedIn homepage to collect the guest cookies (`bcookie`, `lidc`, `JSESSIONID`) a real user would already hold. Hitting search "cold" is a strong bot signal.
-4. **Realistic headers + organic referer.** Each navigation sends a rotating real Chrome user agent, a matching `Accept-Language` / `Sec-Fetch-*` client-hint set, an emulated timezone, and a Google search `Referer` so traffic looks like an organic click-through.
-5. **Human-like pacing.** Posts load via randomized incremental scrolling with jittered pauses instead of a robotic jump to the page bottom.
-6. **Stealth fingerprinting.** `puppeteer-extra-plugin-stealth` masks the usual headless/automation tells.
-
-If you still see frequent `LOGIN_WALL` error items, the cheapest fixes first: lower `total_posts` (fewer page loads per IP), run at off-peak hours, or reduce concurrency. Only if those aren't enough, switch `proxyConfiguration` to the `RESIDENTIAL` group — that costs extra but has the highest success rate. Anonymous access is inherently best-effort; no anti-blocking stack is 100%.
-
-## Development
-
-```bash
-npm install
-npm run start:dev   # run locally with input.json from ./storage
-npm test            # unit tests for the pure helpers
-npm run build       # compile TypeScript to ./dist
-npm run lint
-```
-
-## Disclaimer
-
-This Actor is an independent tool and is not affiliated with, endorsed by, or sponsored by LinkedIn Corporation. LinkedIn® is a registered trademark of LinkedIn Corporation. All trademarks are property of their respective owners.

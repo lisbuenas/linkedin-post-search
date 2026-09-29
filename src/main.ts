@@ -65,7 +65,9 @@ const crawler = new PuppeteerCrawler({
     proxyConfiguration,
     requestHandler: router,
     maxConcurrency: 1, // Single request at a time to avoid detection
+    minConcurrency: 1, // Pin at 1 — no ramp-up overhead for a single-thread actor
     maxRequestRetries: 5, // Auth walls retire the session and retry on a fresh IP
+    navigationTimeoutSecs: 60,   // Hard cap per navigation to prevent hung pages
     requestHandlerTimeoutSecs: 240, // Warmup + human-paced scrolling needs headroom
     // Pin one IP + cookie jar per session and rotate/retire them as they get blocked.
     // With datacenter IPs we rotate sooner (small pool, low usage count) so no single
@@ -108,7 +110,7 @@ const crawler = new PuppeteerCrawler({
                 '--window-size=1920,1080',
                 '--disable-infobars',
                 '--exclude-switches=enable-automation',
-                '--disable-blink-features=AutomationControlled',
+                // REMOVED: duplicate --disable-blink-features=AutomationControlled
             ],
         },
     },

@@ -102,36 +102,54 @@ export function extractPostItems(): RawPostItem[] {
 /**
  * Scroll the page and re-extract posts until `isDone` is satisfied,
  * the page stops yielding new items, or `maxRounds` is reached.
+ *
+ * OPTIMIZATION: Deduplication is now incremental — new items are checked
+ * against a Set on arrival instead of filtering the full array at the end.
+ * This avoids O(n) re-processing of already-seen items on every scroll round
+ * and reduces memory churn when collecting large result sets (50-100+ posts).
+ * Stagnation detection still tracks the raw DOM count so it correctly detects
+ * when LinkedIn stops rendering new cards.
  */
 export async function collectPosts(
     page: Page,
     isDone: (items: RawPostItem[]) => boolean,
     maxRounds = 40,
 ): Promise<RawPostItem[]> {
-    let items: RawPostItem[] = [];
-    let previousCount = 0;
+    const allItems: RawPostItem[] = [];
+    const seenKeys = new Set<string>();
+    let previousDomCount = 0;
     let stagnantRounds = 0;
 
     for (let round = 0; round < maxRounds; round++) {
-        items = await page.evaluate(extractPostItems);
-        if (isDone(items)) break;
-        if (items.length === previousCount) {
+        const pageItems = await page.evaluate(extractPostItems);
+
+        // Merge only new items into allItems — O(1) Set lookup per item.
+        for (const item of pageItems) {
+            const key = item.urn ?? item.url ?? JSON.stringify([item.authorName, item.text]);
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                allItems.push(item);
+            }
+        }
+
+        if (isDone(allItems)) break;
+
+        // Stagnation is based on the DOM card count (pageItems.length), not the
+        // deduplicated allItems count, so re-posts that share a URN don't mask
+        // the fact that LinkedIn has stopped loading new cards.
+        const domCount = pageItems.length;
+        if (domCount === previousDomCount) {
             stagnantRounds += 1;
             if (stagnantRounds >= 3) break;
         } else {
             stagnantRounds = 0;
         }
-        previousCount = items.length;
+        previousDomCount = domCount;
+
         // Human-like incremental scrolling (with its own jittered pauses) loads
         // the next batch of posts without the robotic full-height jump.
         await humanScroll(page);
     }
 
-    const seen = new Set<string>();
-    return items.filter((item) => {
-        const key = item.urn ?? item.url ?? JSON.stringify([item.authorName, item.text]);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
+    return allItems;
 }
